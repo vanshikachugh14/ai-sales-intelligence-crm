@@ -45,12 +45,8 @@ function Login({ onLogin }) {
   const [mode, setMode] = useState("login");
 
   const [name, setName] = useState("");
-  const [email, setEmail] = useState(
-    "shubham.crm@example.com"
-  );
-  const [password, setPassword] = useState(
-    "Test@1234"
-  );
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [role, setRole] = useState("sales_rep");
 
   const [err, setErr] = useState("");
@@ -78,7 +74,6 @@ function Login({ onLogin }) {
         );
 
         onLogin();
-
       } else {
         await api("/auth/register", {
           method: "POST",
@@ -94,7 +89,6 @@ function Login({ onLogin }) {
           "Account created successfully. Signing you in..."
         );
 
-        // Automatically log the new user in
         const result = await api("/auth/login", {
           method: "POST",
           body: JSON.stringify({
@@ -110,7 +104,6 @@ function Login({ onLogin }) {
 
         onLogin();
       }
-
     } catch (error) {
       console.error(error);
 
@@ -131,6 +124,10 @@ function Login({ onLogin }) {
 
     setErr("");
     setSuccess("");
+
+    setName("");
+    setEmail("");
+    setPassword("");
   }
 
   return (
@@ -237,19 +234,10 @@ function Login({ onLogin }) {
             : "Already have an account? Sign in"}
         </button>
 
-        {mode === "login" && (
-  <div className="hint">
-    New to SalesIQ? Create an account to get started.
-  </div>
-)}
-
       </div>
     </div>
   );
 }
- 
-    
-
 
 
 
