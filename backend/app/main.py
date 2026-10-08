@@ -7,11 +7,19 @@ from app.database import Base, engine, SessionLocal
 from app.models import User
 from app.services.security import hash_password
 from app.routes.api import router
+from app.seed_demo import seed_demo_data
 
 
-# Create database tables
+# ============================================================
+# DATABASE
+# ============================================================
+
 Base.metadata.create_all(bind=engine)
 
+
+# ============================================================
+# FASTAPI APP
+# ============================================================
 
 app = FastAPI(
     title="AI Sales Intelligence & CRM",
@@ -20,7 +28,10 @@ app = FastAPI(
 )
 
 
-# CORS configuration
+# ============================================================
+# CORS
+# ============================================================
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -34,16 +45,28 @@ app.add_middleware(
 )
 
 
-# API routes
+# ============================================================
+# ROUTES
+# ============================================================
+
 app.include_router(router)
 
 
+# ============================================================
+# STARTUP
+# ============================================================
+
 @app.on_event("startup")
 def seed_users():
+
     db = SessionLocal()
 
     try:
+
+        # ----------------------------------------------------
         # Create admin user if it does not exist
+        # ----------------------------------------------------
+
         admin_user = db.query(User).filter(
             User.email == "admin@crm.local"
         ).first()
@@ -58,32 +81,22 @@ def seed_users():
                 )
             )
 
-        # One-time production demo user repair
-        if os.getenv("RESET_DEMO_USER") == "true":
-
-            demo_user = db.query(User).filter(
-                User.email == "demo2@salesiq.com"
-            ).first()
-
-            if demo_user:
-                demo_user.password_hash = hash_password("Demo@12345")
-                demo_user.role = "sales_manager"
-
-            else:
-                db.add(
-                    User(
-                        name="Demo User",
-                        email="demo2@salesiq.com",
-                        password_hash=hash_password("Demo@12345"),
-                        role="sales_manager"
-                    )
-                )
-
         db.commit()
 
     finally:
         db.close()
 
+    # --------------------------------------------------------
+    # One-time production demo data seed
+    # --------------------------------------------------------
+
+    if os.getenv("SEED_DEMO_DATA") == "true":
+        seed_demo_data()
+
+
+# ============================================================
+# ROOT
+# ============================================================
 
 @app.get("/")
 def root():
@@ -92,6 +105,10 @@ def root():
         "status": "running"
     }
 
+
+# ============================================================
+# HEALTH CHECK
+# ============================================================
 
 @app.get("/health")
 def health():
