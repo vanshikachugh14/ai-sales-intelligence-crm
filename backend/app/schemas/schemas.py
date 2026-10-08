@@ -117,3 +117,6 @@ class ActivityResponse(ActivityCreate):
     model_config = ConfigDict(
         from_attributes=True
     )
+    
+class ActivityUpdate(BaseModel):
+    completed: bool

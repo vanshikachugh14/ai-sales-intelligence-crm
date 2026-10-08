@@ -397,3 +397,31 @@ def predict_deal(
     return {
         "win_probability": probability
     }
+@router.patch(
+    "/activities/{activity_id}",
+    response_model=ActivityResponse
+)
+def update_activity(
+    activity_id: int,
+    data: ActivityUpdate,
+    db: Session = Depends(get_db),
+    user=Depends(current_user)
+):
+    activity = (
+        db.query(Activity)
+        .filter(Activity.id == activity_id)
+        .first()
+    )
+
+    if not activity:
+        raise HTTPException(
+            status_code=404,
+            detail="Activity not found"
+        )
+
+    activity.completed = data.completed
+
+    db.commit()
+    db.refresh(activity)
+
+    return activity
