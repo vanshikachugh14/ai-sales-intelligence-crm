@@ -57,14 +57,13 @@ app.include_router(router)
 # ============================================================
 
 @app.on_event("startup")
-def seed_users():
+def startup():
 
     db = SessionLocal()
 
     try:
-
         # ----------------------------------------------------
-        # Create admin user if it does not exist
+        # Admin user
         # ----------------------------------------------------
 
         admin_user = db.query(User).filter(
@@ -81,13 +80,31 @@ def seed_users():
                 )
             )
 
+        # ----------------------------------------------------
+        # Demo user
+        # ----------------------------------------------------
+
+        demo_user = db.query(User).filter(
+            User.email == "demo2@salesiq.com"
+        ).first()
+
+        if not demo_user:
+            db.add(
+                User(
+                    name="SalesIQ Demo",
+                    email="demo2@salesiq.com",
+                    password_hash=hash_password("Demo@12345"),
+                    role="sales_manager"
+                )
+            )
+
         db.commit()
 
     finally:
         db.close()
 
     # --------------------------------------------------------
-    # One-time production demo data seed
+    # One-time demo data seed
     # --------------------------------------------------------
 
     if os.getenv("SEED_DEMO_DATA") == "true":
