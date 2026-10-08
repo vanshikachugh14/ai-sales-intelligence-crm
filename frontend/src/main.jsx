@@ -238,10 +238,10 @@ function Login({ onLogin }) {
         </button>
 
         {mode === "login" && (
-          <div className="hint">
-            Demo account: shubham.crm@example.com
-          </div>
-        )}
+  <div className="hint">
+    New to SalesIQ? Create an account to get started.
+  </div>
+)}
 
       </div>
     </div>
