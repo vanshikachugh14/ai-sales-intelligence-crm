@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import "./style.css";
 
-const API = "http://127.0.0.1:8000";
+const API = "https://ai-sales-intelligence-crm.onrender.com";
 
 async function api(path, opts = {}) {
   const token = localStorage.getItem("token");
@@ -41,41 +41,96 @@ async function api(path, opts = {}) {
 /* =========================
    LOGIN
 ========================= */
-
 function Login({ onLogin }) {
+  const [mode, setMode] = useState("login");
+
+  const [name, setName] = useState("");
   const [email, setEmail] = useState(
     "shubham.crm@example.com"
   );
-
   const [password, setPassword] = useState(
     "Test@1234"
   );
+  const [role, setRole] = useState("sales_rep");
 
   const [err, setErr] = useState("");
+  const [success, setSuccess] = useState("");
 
   async function submit(e) {
     e.preventDefault();
+
     setErr("");
+    setSuccess("");
 
     try {
-      const result = await api("/auth/login", {
-        method: "POST",
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
+      if (mode === "login") {
+        const result = await api("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        });
 
-      localStorage.setItem(
-        "token",
-        result.access_token
-      );
+        localStorage.setItem(
+          "token",
+          result.access_token
+        );
 
-      onLogin();
+        onLogin();
+
+      } else {
+        await api("/auth/register", {
+          method: "POST",
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+            role,
+          }),
+        });
+
+        setSuccess(
+          "Account created successfully. Signing you in..."
+        );
+
+        // Automatically log the new user in
+        const result = await api("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        });
+
+        localStorage.setItem(
+          "token",
+          result.access_token
+        );
+
+        onLogin();
+      }
+
     } catch (error) {
       console.error(error);
-      setErr("Login failed");
+
+      setErr(
+        mode === "login"
+          ? "Invalid email or password"
+          : "Registration failed. Email may already be registered."
+      );
     }
+  }
+
+  function switchMode() {
+    setMode(
+      mode === "login"
+        ? "register"
+        : "login"
+    );
+
+    setErr("");
+    setSuccess("");
   }
 
   return (
@@ -92,7 +147,25 @@ function Login({ onLogin }) {
           AI Sales Intelligence & CRM
         </p>
 
+        <h2>
+          {mode === "login"
+            ? "Welcome back"
+            : "Create your account"}
+        </h2>
+
         <form onSubmit={submit}>
+
+          {mode === "register" && (
+            <input
+              value={name}
+              onChange={(e) =>
+                setName(e.target.value)
+              }
+              placeholder="Full name"
+              type="text"
+              required
+            />
+          )}
 
           <input
             value={email}
@@ -101,6 +174,7 @@ function Login({ onLogin }) {
             }
             placeholder="Email"
             type="email"
+            required
           />
 
           <input
@@ -110,13 +184,33 @@ function Login({ onLogin }) {
             }
             placeholder="Password"
             type="password"
+            required
           />
+
+          {mode === "register" && (
+            <select
+              value={role}
+              onChange={(e) =>
+                setRole(e.target.value)
+              }
+            >
+              <option value="sales_rep">
+                Sales Representative
+              </option>
+
+              <option value="sales_manager">
+                Sales Manager
+              </option>
+            </select>
+          )}
 
           <button
             className="primary-button full-width"
             type="submit"
           >
-            Sign in
+            {mode === "login"
+              ? "Sign in"
+              : "Create account"}
           </button>
 
         </form>
@@ -127,14 +221,36 @@ function Login({ onLogin }) {
           </div>
         )}
 
-        <div className="hint">
-          Demo account: shubham.crm@example.com
-        </div>
+        {success && (
+          <div className="success-message">
+            {success}
+          </div>
+        )}
+
+        <button
+          type="button"
+          className="text-button"
+          onClick={switchMode}
+        >
+          {mode === "login"
+            ? "New here? Create an account"
+            : "Already have an account? Sign in"}
+        </button>
+
+        {mode === "login" && (
+          <div className="hint">
+            Demo account: shubham.crm@example.com
+          </div>
+        )}
 
       </div>
     </div>
   );
 }
+ 
+    
+
+
 
 
 /* =========================
